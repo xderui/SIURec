@@ -1,11 +1,3 @@
-'''
-Description: 
-Author: Rigel Ma
-Date: 2024-04-15 10:28:44
-LastEditors: Rigel Ma
-LastEditTime: 2024-04-17 15:47:34
-FilePath: main.py
-'''
 import torch
 import numpy as np 
 from utils.load_data import Data
@@ -18,26 +10,6 @@ from tqdm import tqdm
 import time
 
 def pareto_efficient_weights(prev_w, c, G):
-
-    ############# 细粒度 ###########
-    '''
-    G: [K, batch_size, m]
-    c :[K, batch_size]
-    prev_w: [K, batch_size]
-    '''
-
-    # GGT = np.matmul(G, )
-
-    ###############################
-
-    """
-    G: [K,m]，G[i,:] 是第 i 个 task 对所有参数的梯度，m 是所有待优化参数的个数
-    c: [K,1] 每个目标权重的下限约束
-    prev_w: [K,1] 上一轮迭代各 loss 的权重
-    """
-
-    # ------------------ 暂时忽略非负约束
-    # 对应公式(7-30)
     GGT = np.matmul(G, np.transpose(G))  # [K, K]
     e = np.ones(np.shape(prev_w))  # [K, 1]
     m_up = np.hstack((GGT, e))  # [K, K+1]
@@ -51,26 +23,19 @@ def pareto_efficient_weights(prev_w, c, G):
     w_hat = w_hat[:-1]  # [K, 1]
     w_hat = np.reshape(w_hat, (w_hat.shape[0],))  # [K,]
 
-    # ------------------ 重新考虑非负约束时的最优解
     return active_set_method(w_hat, prev_w.squeeze(-1), c)
 
 
 def active_set_method(w_hat, prev_w, c):
-    # ------------------ 对应公式(7-30)
-    A = np.eye(len(c))    # [k, k] 的单位矩阵
-    cons = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # 等式约束
-    # cons = {'type':'ineq', 'fun': lambda x: np.sum(x) - 3}  # 不等式约束
-    # cons_2 = {'type': 'ineq', 'fun': lambda x: }
-    bounds = [[0., None] for _ in range(len(w_hat))]  # 不等式约束，要求所有 weight 都非负
+    A = np.eye(len(c))    # [k, k]
+    cons = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+    bounds = [[0., None] for _ in range(len(w_hat))] 
     result = opt.minimize(lambda x: np.linalg.norm(A.dot(x) - w_hat),
-                      x0=prev_w,  # 上次的权重作为本次的初值
-                      method='SLSQP',  # trust-constr
+                      x0=prev_w,  
+                      method='SLSQP',
                       bounds=bounds,
                       constraints=cons)
-    # ------------------ 对应公式(7-31)
     
-    # print('rest',result.x, c)
-
     return result.x + c.reshape(result.x.shape)
 
 

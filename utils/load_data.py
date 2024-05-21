@@ -1,12 +1,3 @@
-'''
-Description: 
-Author: Rigel Ma
-Date: 2024-04-15 10:31:57
-LastEditors: Rigel Ma
-LastEditTime: 2024-04-15 13:40:03
-FilePath: load_data.py
-'''
-
 import os
 import pickle
 import numpy as np

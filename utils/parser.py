@@ -1,11 +1,3 @@
-'''
-Description: 
-Author: Rigel Ma
-Date: 2024-04-15 10:58:20
-LastEditors: Rigel Ma
-LastEditTime: 2024-04-15 17:48:27
-FilePath: parser.py
-'''
 import argparse
 
 def parse_args(args=[]):
