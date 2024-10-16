@@ -131,7 +131,7 @@ if __name__ == "__main__":
             
                 # align grad
                 layers_grads = []
-                layer_params_grad = list(torch.autograd.grad(bpr_loss / 0.6943, parameters, retain_graph=True ))  # use the value of the embeddings when they were first initialised as the upper bound of BPR loss
+                layer_params_grad = list(torch.autograd.grad(bpr_loss / 0.6943, parameters, retain_graph=True ))  # use the value of BPR loss when embeddings are first initialised as the upper bound.
                 for idx, grad_ in enumerate(layer_params_grad):
                     layer_params_grad[idx] = grad_[user_item_idx[idx]]
                 layer_params_grad = torch.concat(layer_params_grad, dim=0)
