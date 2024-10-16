@@ -10,20 +10,14 @@ from tqdm import tqdm
 import time
 
 def pareto_efficient_weights(prev_w, c, G):
-    GGT = np.matmul(G, np.transpose(G))  # [K, K]
-    e = np.ones(np.shape(prev_w))  # [K, 1]
-    m_up = np.hstack((GGT, e))  # [K, K+1]
-    m_down = np.hstack((np.transpose(e), np.zeros((1, 1))))  # [1, K+1]
-    M = np.vstack((m_up, m_down))  # [K+1, K+1]
-
-    z = np.vstack((-np.matmul(GGT, c), 1 - np.sum(c)))  # [K+1, 1]
-
+    GGT = np.matmul(G, np.transpose(G)) 
+    e = np.ones(np.shape(prev_w)) 
+    M = np.vstack((np.hstack((GGT, e)), np.hstack((np.transpose(e), np.zeros((1, 1))))))
     MTM = np.matmul(np.transpose(M), M)
-    w_hat = np.matmul(np.matmul(np.linalg.inv(MTM), M), z)  # [K+1, 1]
-    w_hat = w_hat[:-1]  # [K, 1]
-    w_hat = np.reshape(w_hat, (w_hat.shape[0],))  # [K,]
+    w_hat = np.matmul(np.matmul(np.linalg.inv(MTM), M), np.vstack((-np.matmul(GGT, c), 1 - np.sum(c))))[:-1]
+    w_hat = np.reshape(w_hat, (w_hat.shape[0],)) 
 
-    return active_set_method(w_hat, prev_w.squeeze(-1), c)
+    return active_set_search(w_hat, prev_w.squeeze(-1), c)
 
 
 if __name__ == "__main__":
@@ -157,10 +151,8 @@ if __name__ == "__main__":
                 mean_w_bpr_uniform.append(w_bpr_uniform_temp)
 
 
-            # t1 = time.time()
             batch_loss.backward()
             optimizer.step()
-            # print(time.time()-t1)
 
         if epoch == 0:
             w_bpr_uniform_temp = np.mean(mean_w_bpr_uniform, axis=0)
