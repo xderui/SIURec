@@ -26,19 +26,6 @@ def pareto_efficient_weights(prev_w, c, G):
     return active_set_method(w_hat, prev_w.squeeze(-1), c)
 
 
-def active_set_method(w_hat, prev_w, c):
-    A = np.eye(len(c))    # [k, k]
-    cons = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
-    bounds = [[0., None] for _ in range(len(w_hat))] 
-    result = opt.minimize(lambda x: np.linalg.norm(A.dot(x) - w_hat),
-                      x0=prev_w,  
-                      method='SLSQP',
-                      bounds=bounds,
-                      constraints=cons)
-    
-    return result.x + c.reshape(result.x.shape)
-
-
 if __name__ == "__main__":
 
     args = parse_args()
@@ -144,7 +131,7 @@ if __name__ == "__main__":
             
                 # align grad
                 layers_grads = []
-                layer_params_grad = list(torch.autograd.grad(bpr_loss / 0.6943, parameters, retain_graph=True ))
+                layer_params_grad = list(torch.autograd.grad(bpr_loss / 0.6943, parameters, retain_graph=True ))  # use the value of the embeddings when they were first initialised as the upper bound of BPR loss
                 for idx, grad_ in enumerate(layer_params_grad):
                     layer_params_grad[idx] = grad_[user_item_idx[idx]]
                 layer_params_grad = torch.concat(layer_params_grad, dim=0)
