@@ -92,7 +92,10 @@ if __name__ == "__main__":
             unique_items = torch.unique(pos_items)
             for idx, (u_interests, i_interests) in enumerate(zip(u_fine_interests, i_fine_interests)):
                 uniform_losses.append(args.uniform_reg * (UNIFORM_LOSS(u_interests[unique_users]) + UNIFORM_LOSS(i_interests[unique_items])))
-                uniform_loss = uniform_loss + w_uniform[idx] * uniform_losses[idx]
+                if w_uniform[idx] < 1e-3:
+                    continue
+                else:
+                    uniform_loss = uniform_loss + w_uniform[idx] * uniform_losses[idx]
 
 
             batch_loss = bpr_loss * w_bpr_uniform[0] + reg_loss + uniform_loss * w_bpr_uniform[1]
