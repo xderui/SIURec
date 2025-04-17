@@ -9,6 +9,20 @@ from utils.batch_test import *
 from tqdm import tqdm
 import time
 
+
+def active_set_search(w_hat, prev_w, c):
+    A = np.eye(len(c))
+    cons = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+
+    bounds = [[0., None] for _ in range(len(w_hat))]
+    result = opt.minimize(lambda x: np.linalg.norm(A.dot(x) - w_hat),
+                      x0=prev_w, 
+                      method='SLSQP',
+                      bounds=bounds,
+                      constraints=cons)
+
+    return result.x + c.reshape(result.x.shape)
+
 def pareto_efficient_weights(prev_w, c, G):
     GGT = np.matmul(G, np.transpose(G)) 
     e = np.ones(np.shape(prev_w)) 
@@ -18,6 +32,8 @@ def pareto_efficient_weights(prev_w, c, G):
     w_hat = np.reshape(w_hat, (w_hat.shape[0],)) 
 
     return active_set_search(w_hat, prev_w.squeeze(-1), c)
+
+
 
 
 if __name__ == "__main__":
