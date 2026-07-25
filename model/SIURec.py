@@ -56,24 +56,20 @@ class SIURec(nn.Module):
         return G_indices, G_values
     
     def fine_laplacian_adj(self, gnn_embs):
-        gnn_embs_row = torch.index_select(gnn_embs, 0, self.rows_half)
-        gnn_embs_col = torch.index_select(gnn_embs, 0, self.cols_half)
+        gnn_embs_row = torch.index_select(gnn_embs, 0, self.rows)
+        gnn_embs_col = torch.index_select(gnn_embs, 0, self.cols)
 
         gnn_embs_row = F.normalize(gnn_embs_row)
         gnn_embs_col = F.normalize(gnn_embs_col)
 
         scores = (torch.sum(gnn_embs_row * gnn_embs_col, dim=1).view(-1) + 1) / 2
 
-        A_indices_sparse = torch_sparse.SparseTensor(row=self.rows_half, col=self.cols_half, value=scores, sparse_sizes=self.A_shape).cuda()
+        A_indices_sparse = torch_sparse.SparseTensor(row=self.rows, col=self.cols, value=scores, sparse_sizes=self.A_shape).cuda()
 
-        D_values_user = A_indices_sparse.sum(dim=1).pow(-1).nan_to_num(0, 0, 0).view(-1)
-        D_values_item = A_indices_sparse.sum(dim=0).pow(-1).nan_to_num(0, 0, 0).view(-1)
-
+        D_values = A_indices_sparse.sum(dim=1).pow(-1).nan_to_num(0, 0, 0).view(-1)
 
         G_indices = torch.stack([self.rows, self.cols], dim=0)
-        G_values_user = D_values_user[self.rows_half] * scores
-        G_values_item = D_values_item[self.cols_half] * scores
-        G_values = torch.concat([G_values_user, G_values_item], dim=-1)
+        G_values = D_values[self.rows] * scores
 
         return G_indices, G_values
 
